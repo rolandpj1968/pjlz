@@ -1,7 +1,9 @@
+#include <cassert>
 #include <chrono>
 #include <cstddef>
 #include <cstdio>
 
+#include "longest-common-prefix.hpp"
 #include "nearest-prefix.hpp"
 #include "slurp.hpp"
 #include "suffix-sort.hpp"
@@ -69,13 +71,45 @@ int main(int argc, char* argv[]) {
 
   size_t* ss = new size_t[n];
 
-  SuffixSort::suffix_sort(s, n, ss);
+  SuffixSort::suffix_sort(s, ss, n);
 
   t1 = Time::now();
   ds = t1 - t0;
   secs = ds.count();
   
   printf("Suffix sorted %s length %zu bytes in %.3lf milliseconds - %.3lf MB/s\n", argv[1], n, secs*1000.0, n/secs/1024/1024);
+  
+  t0 = Time::now();
+
+  assert(SuffixSort::check_suffix_sort(s, ss, n) && "suffix sort is correct");
+
+  t1 = Time::now();
+  ds = t1 - t0;
+  secs = ds.count();
+  
+  printf("Checked suffix sort for %s length %zu bytes in %.3lf milliseconds - %.3lf MB/s\n", argv[1], n, secs*1000.0, n/secs/1024/1024);
+  
+  t0 = Time::now();
+
+  size_t* ss_lcp = new size_t[n];
+
+  LongestCommonPrefix::longest_common_prefixes(s, ss, ss_lcp, n);
+
+  t1 = Time::now();
+  ds = t1 - t0;
+  secs = ds.count();
+  
+  printf("Generated ss_lcp for %s length %zu bytes in %.3lf milliseconds - %.3lf MB/s\n", argv[1], n, secs*1000.0, n/secs/1024/1024);
+  
+  t0 = Time::now();
+
+  assert(LongestCommonPrefix::check_longest_common_prefixes(s, ss, ss_lcp, n) && "longest common prefixes are correct");
+
+  t1 = Time::now();
+  ds = t1 - t0;
+  secs = ds.count();
+  
+  printf("Checked ss_lcp sort for %s length %zu bytes in %.3lf milliseconds - %.3lf MB/s\n", argv[1], n, secs*1000.0, n/secs/1024/1024);
   
   t0 = Time::now();
 

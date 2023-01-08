@@ -54,8 +54,14 @@ namespace SuffixSort {
     std::stable_sort(ss, ss + ss_len, suffix_less);
   }
 
+  //
+  // ss[i] is filled with the suffix sort of s
+  //
+  // Naive O(N^2logN) algo.
+  // TODO implement more efficient algorithm.
+  //
   template <typename sizeN_t>
-  inline void suffix_sort(const u8* s, sizeN_t n, sizeN_t* ss) {
+  inline void __attribute__ ((noinline)) suffix_sort(const u8* s, sizeN_t* ss, sizeN_t n) {
 
     // unordered suffix indexes
     for (sizeN_t i = 0; i < n; i++) {
@@ -63,6 +69,17 @@ namespace SuffixSort {
     }
 
     suffix_sort_range(s, n, ss, n);
+  }
+
+  template <typename sizeN_t>
+  inline bool __attribute__ ((noinline)) check_suffix_sort(const u8* s, const sizeN_t* ss, sizeN_t n) {
+    for (sizeN_t i = 0; i < n-1; i++) {
+      if (!(suffix_less(s, n, ss[i], ss[i+1]))) {
+	return false;
+      }
+    }
+
+    return true;
   }
   
 } // namespace SuffixSort
