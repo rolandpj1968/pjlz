@@ -74,14 +74,35 @@ namespace SuffixSort {
   template <typename sizeN_t>
   inline bool __attribute__ ((noinline)) check_suffix_sort(const u8* s, const sizeN_t* ss, sizeN_t n) {
     for (sizeN_t i = 0; i < n-1; i++) {
-      if (!(suffix_less(s, n, ss[i], ss[i+1]))) {
+      if (!suffix_less(s, n, ss[i], ss[i+1])) {
 	return false;
       }
     }
 
     return true;
   }
-  
+
+  //
+  // Populate ssi with the inverse map of ss.
+  //
+  template <typename sizeN_t>
+  inline void __attribute__ ((noinline)) inverse_suffix_sort(const sizeN_t* ss, sizeN_t* ssi, sizeN_t n) {
+    for (sizeN_t i = 0; i < n; i++) {
+      ssi[ss[i]] = i;
+    }
+  }
+
+  template <typename sizeN_t>
+  inline bool __attribute__ ((noinline)) check_inverse_suffix_sort(const sizeN_t* ss, const sizeN_t* ssi, sizeN_t n) {
+    for (sizeN_t i = 0; i < n-1; i++) {
+      if (ssi[ss[i]] != i) {
+	return false;
+      }
+    }
+
+    return true;
+  }
+
 } // namespace SuffixSort
 
 #endif //def SUFFIX_SORT_HPP

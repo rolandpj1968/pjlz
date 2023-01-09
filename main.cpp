@@ -91,25 +91,47 @@ int main(int argc, char* argv[]) {
   
   t0 = Time::now();
 
-  size_t* ss_lcp = new size_t[n];
+  size_t* ssi = new size_t[n];
 
-  LongestCommonPrefix::longest_common_prefixes(s, ss, ss_lcp, n);
+  SuffixSort::inverse_suffix_sort(ss, ssi, n);
 
   t1 = Time::now();
   ds = t1 - t0;
   secs = ds.count();
   
-  printf("Generated ss_lcp for %s length %zu bytes in %.3lf milliseconds - %.3lf MB/s\n", argv[1], n, secs*1000.0, n/secs/1024/1024);
+  printf("Inverse suffix sort of %s length %zu bytes in %.3lf milliseconds - %.3lf MB/s\n", argv[1], n, secs*1000.0, n/secs/1024/1024);
   
   t0 = Time::now();
 
-  assert(LongestCommonPrefix::check_longest_common_prefixes(s, ss, ss_lcp, n) && "longest common prefixes are correct");
+  assert(SuffixSort::check_inverse_suffix_sort(ss, ssi, n) && "suffix sort is correct");
 
   t1 = Time::now();
   ds = t1 - t0;
   secs = ds.count();
   
-  printf("Checked ss_lcp sort for %s length %zu bytes in %.3lf milliseconds - %.3lf MB/s\n", argv[1], n, secs*1000.0, n/secs/1024/1024);
+  printf("Checked inverse suffix sort for %s length %zu bytes in %.3lf milliseconds - %.3lf MB/s\n", argv[1], n, secs*1000.0, n/secs/1024/1024);
+  
+  t0 = Time::now();
+
+  size_t* lcp = new size_t[n];
+
+  LongestCommonPrefix::longest_common_prefixes(s, ss, ssi, lcp, n);
+
+  t1 = Time::now();
+  ds = t1 - t0;
+  secs = ds.count();
+  
+  printf("Generated ss lcp for %s length %zu bytes in %.3lf milliseconds - %.3lf MB/s\n", argv[1], n, secs*1000.0, n/secs/1024/1024);
+  
+  t0 = Time::now();
+
+  assert(LongestCommonPrefix::check_longest_common_prefixes(s, ss, lcp, n) && "longest common prefixes are correct");
+
+  t1 = Time::now();
+  ds = t1 - t0;
+  secs = ds.count();
+  
+  printf("Checked ss lcp sort for %s length %zu bytes in %.3lf milliseconds - %.3lf MB/s\n", argv[1], n, secs*1000.0, n/secs/1024/1024);
   
   t0 = Time::now();
 
@@ -128,8 +150,8 @@ int main(int argc, char* argv[]) {
   t0 = Time::now();
 
   size_t* bpm = new size_t[n];
-  size_t* lcp = new size_t[n];
-  NearestPrefix::best_prefix_match(s, ss, npf, npb, bpm, lcp, n);
+  size_t* lsm = new size_t[n];
+  NearestPrefix::best_prefix_match(s, ss, npf, npb, bpm, lsm, n);
 
   t1 = Time::now();
   ds = t1 - t0;
@@ -163,7 +185,7 @@ int main(int argc, char* argv[]) {
       } else {
 	size_t s_j_len = n-j;
 
-	printf("best match at %6zu lcp %6zu: %*.16s\n", j, lcp[i], (int)std::min(s_j_len, prefix_printf_len), &s[j]);
+	printf("best match at %6zu lsm %6zu: %*.16s\n", j, lsm[i], (int)std::min(s_j_len, prefix_printf_len), &s[j]);
       }
     }
   }
@@ -189,7 +211,7 @@ int main(int argc, char* argv[]) {
 
     // Let's just do a greedy walk...
     for (size_t i = 0; i < n; i++) {
-      size_t match_len = lcp[i];
+      size_t match_len = lsm[i];
       if (match_len >= MIN_MATCH_LEN) {
 	// Match!
 	size_t offset = i-bpm[i];
@@ -278,7 +300,7 @@ int main(int argc, char* argv[]) {
 
     // Let's just do a greedy walk...
     for (size_t i = 0; i < n; i++) {
-      size_t match_len = lcp[i];
+      size_t match_len = lsm[i];
       // lz4 offset is fixed 2-byte value - we need to prepare pbm with this but for now just ignore more distant matches
       if ((match_len >= MIN_MATCH_LEN) && (i-bpm[i] < (1<<16))) {
 	// Match!
