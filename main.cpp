@@ -4,6 +4,7 @@
 #include <cstdio>
 
 #include "longest-common-prefix.hpp"
+#include "maximal-substring-match.hpp"
 #include "nearest-prefix.hpp"
 #include "slurp.hpp"
 #include "suffix-sort.hpp"
@@ -159,6 +160,30 @@ int main(int argc, char* argv[]) {
   
   printf("Found best prefix matches in %.3lf milliseconds - %.3lf MB/s\n", secs*1000.0, n/secs/1024/1024);
 
+  t0 = Time::now();
+
+  size_t* msm_offsets = new size_t[n];
+  size_t* msm_lens = new size_t[n];
+  const size_t MIN_MATCH_LEN = 4;
+  
+  MaximalSubstringMatch::maximal_substring_matches(s, ss, lcp, msm_offsets, msm_lens, n, MIN_MATCH_LEN);
+
+  t1 = Time::now();
+  ds = t1 - t0;
+  secs = ds.count();
+  
+  printf("Found maximal substring matches in %.3lf milliseconds - %.3lf MB/s\n", secs*1000.0, n/secs/1024/1024);
+
+  t0 = Time::now();
+
+  assert(MaximalSubstringMatch::check_maximal_substring_matches(s, msm_offsets, msm_lens, n, MIN_MATCH_LEN) && "maximal substring matches are correct");
+
+  t1 = Time::now();
+  ds = t1 - t0;
+  secs = ds.count();
+  
+  printf("Checked maximal substring matches in %.3lf milliseconds - %.3lf MB/s\n", secs*1000.0, n/secs/1024/1024);
+  
   if (0) {
     size_t prefix_printf_len = 16;
 
@@ -239,10 +264,12 @@ int main(int argc, char* argv[]) {
 	  exit(0);
 	}
 
+	size_t match_len_len = encoded_len_pjlz(match_len-MIN_MATCH_LEN, 15);
+	
 	// > rather than >= cos it's actually beneficial to emit matches that themselves have
 	//  zero benefit because they break up the literal string which then more often fits in
 	//  a nibble.
-	if (offset_len + 1 > match_len) {
+	if (offset_len + match_len_len + 1 > match_len) { // #$%@#$%$@#%#$ TODO
 	  lit_len++;
 	  continue;
 	}
@@ -254,7 +281,6 @@ int main(int argc, char* argv[]) {
 	size_t lit_len_len = encoded_len_pjlz(lit_len, 15);
 	n_literal_lengths_of_len[lit_len_len]++;
 
-	size_t match_len_len = encoded_len_pjlz(match_len-MIN_MATCH_LEN, 15);
 	n_match_lengths_of_len[match_len_len]++;
 
 	total_lit_len += lit_len;

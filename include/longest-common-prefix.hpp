@@ -27,7 +27,6 @@ namespace LongestCommonPrefix {
 
   //
   // lcp[i] will contain the longest-common-prefix of ss[i] and ss[i+1].
-  // lcp[n-1] will be zero.
   //
   // Kasai O(N) algo.
   //
