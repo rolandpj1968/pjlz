@@ -24,10 +24,17 @@ namespace MaximalSubstringMatch {
     std::pair<sizeN_t, sizeN_t>* unmatched = new std::pair<sizeN_t, sizeN_t>[n];
     sizeN_t unmatched_top = 0;
 
+    // TODO remove @#$%@#$%@#$%
+    const sizeN_t WATCH_S_I = /*9843143;*/10192440;
+
     // Iterate forwards over suffix sort to find substring matches later in the suffix sort
     for (sizeN_t rank_i = 0; rank_i < n; rank_i++) {
       // Index of suffix in s
       sizeN_t s_i = ss[rank_i];
+
+      if (s_i == WATCH_S_I) {
+	printf("                                                                      processing s[%zu] forwards at rank %zu tos %zu\n", s_i, rank_i, unmatched_top);
+      }
 
       // Process matches where this string index is lower than stack entries
       while (unmatched_top > 0) {
@@ -47,13 +54,21 @@ namespace MaximalSubstringMatch {
 	// TODO - use lcp for this
 	sizeN_t match_len = Util::longest_common_prefix(&s[s_i], n-s_i, &s[match_s_i], n-match_s_i);
 
+	if (match_s_i == WATCH_S_I) {
+	  printf("                                                                         matched s[%zu] forwards at rank %zu tos %zu with s[%zu] offset %zu match-len %zu\n", match_s_i, rank_i, unmatched_top, s_i, match_s_i-s_i, match_len);
+	}
 	if (match_len >= min_match_len) {
-	  msm_offsets[s_i] = match_s_i - s_i;
-	  msm_lens[s_i] = match_len;
+	  //printf("                             Got 1 substring match!!!!!!!!!!!!!!!!!!!!!\n");
+	  //assert(false);
+	  msm_offsets[match_s_i] = match_s_i - s_i;
+	  msm_lens[match_s_i] = match_len;
 	}
       }
 
-      unmatched[unmatched_top++] = std::pair<sizeN_t, sizeN_t>(s_i, lcp[rank_i]);
+      if (s_i == WATCH_S_I) {
+	printf("                                                                           pushing s[%zu] forwards at rank %zu tos %zu\n", s_i, rank_i, unmatched_top);
+      }
+      unmatched[unmatched_top++] = std::pair<sizeN_t, sizeN_t>(rank_i, lcp[rank_i]);
 
       // Will be overwritten with the real match if one is found
       msm_offsets[s_i] = 0;
@@ -63,10 +78,25 @@ namespace MaximalSubstringMatch {
     // Clear stack for re-use - remaining elements have no forwards matches
     unmatched_top = 0;
 
+    printf("                                      starting backwards tos %zu\n", unmatched_top);
+
     // Iterate backwards over suffix sort to find matches earlier in the suffix sort
-    for (sizeN_t rank_i = n-1; /*break in loop*/; --rank_i) {
+    // @$%@#$%@#$%#$% TODO....
+    if (1) for (sizeN_t rank_i = n-1; /*break in loop*/; --rank_i) {
       // Index of suffix in s
       sizeN_t s_i = ss[rank_i];
+
+      if (s_i == WATCH_S_I) {
+	printf("                                                                      processing s[%zu] backwards at rank %zu tos %zu\n", s_i, rank_i, unmatched_top);
+      }
+
+      {
+	static bool done = false;
+	if (!done && unmatched_top > 0 && unmatched[unmatched_top].first == WATCH_S_I) {
+	  done = true;
+	  printf("                                                                               s[%zu] at tos at rank %zu tos %zu for s[%zu]\n", WATCH_S_I, rank_i, unmatched_top, s_i);
+	}
+      }
 
       // Process matches if this string index is lower than stack entries
       while (unmatched_top > 0) {
@@ -86,18 +116,30 @@ namespace MaximalSubstringMatch {
 	// TODO - use lcp for this
 	sizeN_t match_len = Util::longest_common_prefix(&s[s_i], n-s_i, &s[match_s_i], n-match_s_i);
 
-	// Only use if the match is longer than the forwards match
-	if (match_len >= min_match_len && match_len > msm_lens[s_i]) {
-	  msm_offsets[s_i] = match_s_i - s_i;
-	  msm_lens[s_i] = match_len;
+	if (match_s_i == WATCH_S_I) {
+	  printf("                                                                         matched s[%zu] backwards at rank %zu tos %zu with s[%zu] offset %zu match-len %zu\n", match_s_i, rank_i, unmatched_top, s_i, match_s_i-s_i, match_len);
+	}
+	
+	// Only use if the match is longer or closer than the forwards match.
+	if (match_len >= min_match_len) {
+	  //sizeN_t curr_match_offset = msm_offsets[match_s_i];
+	  sizeN_t curr_match_len = msm_lens[match_s_i];
+	  // @#$%@#$%@#$% TODO prefer closer too
+	  if (curr_match_len < match_len) {
+	    msm_offsets[match_s_i] = match_s_i - s_i;
+	    msm_lens[match_s_i] = match_len;
+	  }
 	}
       }
 
-      unmatched[unmatched_top++] = std::pair<sizeN_t, sizeN_t>(s_i, lcp[rank_i]);
+      if (s_i == WATCH_S_I) {
+	printf("                                                                           pushing s[%zu] backwards at rank %zu tos %zu\n", s_i, rank_i, unmatched_top);
+      }
+      unmatched[unmatched_top++] = std::pair<sizeN_t, sizeN_t>(rank_i, lcp[rank_i]);
 
       // Will be overwritten with the real match if one is found
-      msm_offsets[s_i] = 0;
-      msm_lens[s_i] = 0;
+      //msm_offsets[s_i] = 0;
+      //msm_lens[s_i] = 0;
 
       // avoid underflow
       if (rank_i == 0) {
@@ -117,6 +159,7 @@ namespace MaximalSubstringMatch {
       sizeN_t msm_len = msm_lens[s_i];
       
       if ((msm_offset == 0) != (msm_len == 0)) {
+	printf("                        s_i %zu Boooooooo1 match offset %zu len %zu\n", s_i, msm_offset, msm_len);
 	return false;
       }
 
@@ -125,10 +168,12 @@ namespace MaximalSubstringMatch {
       }
 
       if (msm_len < min_match_len) {
+	printf("                        s_i %zu Boooooooo2\n", s_i);
 	return false;
       }
 
       if (msm_offset > s_i) {
+	printf("                        s_i %zu Boooooooo3\n", s_i);
 	return false;
       }
 
@@ -137,6 +182,7 @@ namespace MaximalSubstringMatch {
       sizeN_t match_len = Util::longest_common_prefix(&s[s_i], n-s_i, &s[match_s_i], n-match_s_i);
 
       if (match_len != msm_len) {
+	printf("                        s_i %zu Boooooooo4\n", s_i);
 	return false;
       }
     }

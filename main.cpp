@@ -162,6 +162,16 @@ int main(int argc, char* argv[]) {
 
   t0 = Time::now();
 
+  assert(NearestPrefix::check_best_prefix_match(s, bpm, lsm, n) && "best prefix matches are valid");
+
+  t1 = Time::now();
+  ds = t1 - t0;
+  secs = ds.count();
+  
+  printf("Checked best prefix matches in %.3lf milliseconds - %.3lf MB/s\n", secs*1000.0, n/secs/1024/1024);
+
+  t0 = Time::now();
+
   size_t* msm_offsets = new size_t[n];
   size_t* msm_lens = new size_t[n];
   const size_t MIN_MATCH_LEN = 4;
@@ -237,9 +247,19 @@ int main(int argc, char* argv[]) {
     // Let's just do a greedy walk...
     for (size_t i = 0; i < n; i++) {
       size_t match_len = lsm[i];
+      size_t match_len_new = msm_lens[i];
+
+      //assert(match_len == 0 || match_len == match_len_old);
+      //assert(match_len == 0 || match_len >= MIN_MATCH_LEN);
+      //assert(match_len_old < MIN_MATCH_LEN || match_len == match_len_old);
+      
       if (match_len >= MIN_MATCH_LEN) {
 	// Match!
 	size_t offset = i-bpm[i];
+	size_t offset_new = msm_offsets[i];
+
+	//assert(offset == offset2);
+	
 	size_t offset_len = encoded_len_pjlz(offset, 0);
 
 	if (i-bpm[i] < (1<<16)) {
@@ -292,6 +312,8 @@ int main(int argc, char* argv[]) {
 	lit_len++;
       }
     }
+
+    total_lit_len += lit_len;
 
     printf("\n");
     printf("pjlz encoding - n_2byte_offsets = %zu / %zu / %zu\n", n_2byte_offsets, n_2byte_offsets1, n_2byte_offsets2);
@@ -347,6 +369,9 @@ int main(int argc, char* argv[]) {
       }
     }
 
+    total_lit_len += lit_len;
+    lz4_len += lit_len;
+    
     // Last bit - inaccurate but pah
     lz4_len += 1 + 8 + 2;
 
@@ -357,3 +382,26 @@ int main(int argc, char* argv[]) {
     printf("Raw %6zu bytes / compressed %6zu bytes / compression ratio %.3lf%%\n\n", n, lz4_len, (double)lz4_len/(double)n*100.0);
   }
 }
+
+#if 0
+
+      if(!(match_len == 0 || match_len == match_len_old)) {
+	printf("                                       s[%zu] match_len == %zu, match_len_old == %zu\n", i, match_len, match_len_old);
+	size_t offset2 = i-bpm[i];
+	size_t offset = msm_offsets[i];
+	printf("                                              offset = %zu, old-offset = %zu, match-index %zu, old-match-index %zu\n", offset, offset2, bpm[i], i-msm_offsets[i]);
+	size_t actual_match = Util::longest_common_prefix(&s[i], n-i, &s[i-offset], n-(i-offset));
+	size_t actual_match_old = Util::longest_common_prefix(&s[i], n-i, &s[i-offset2], n-(i-offset2));
+	printf("                                              actual-match-len = %zu, actual-old-match-len = %zu\n", actual_match, actual_match_old);
+      }
+
+	if(!(offset == offset2)) {
+	  size_t offset2 = i-bpm[i];
+	  size_t offset = msm_offsets[i];
+	  printf("                                       s[%zu] offset = %zu, old-offset = %zu, match-index %zu, old-match-index %zu\n", i, offset, offset2, bpm[i], i-msm_offsets[i]);
+	  printf("                                              match_len == %zu, match_len_old == %zu\n", match_len, match_len_old);
+	  size_t actual_match = Util::longest_common_prefix(&s[i], n-i, &s[i-offset], n-(i-offset));
+	  size_t actual_match_old = Util::longest_common_prefix(&s[i], n-i, &s[i-offset2], n-(i-offset2));
+	  printf("                                              actual-match-len = %zu, actual-old-match-len = %zu\n", actual_match, actual_match_old);
+	}
+#endif //0

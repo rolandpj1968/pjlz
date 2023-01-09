@@ -78,6 +78,8 @@ namespace NearestPrefix {
   //
   template <typename sizeN_t>
   inline void best_prefix_match(const u8* s, const sizeN_t* ss, const sizeN_t* npf, const sizeN_t* npb, sizeN_t* bpm, sizeN_t* lcp, sizeN_t n) {
+
+    const sizeN_t WATCH_S_I = 34;
     
     for (sizeN_t i = 0; i < n; i++) {
       // Offset in s of suffix at index i in suffix order.
@@ -87,7 +89,14 @@ namespace NearestPrefix {
       sizeN_t npf_ss_j = npf[i];
       sizeN_t npb_ss_j = npb[i];
 
+      if (s_i == WATCH_S_I) {
+	printf("                best_prefix_match for s[%zu] npf = ss[%zu] npb = ss[%zu]\n", s_i, npf_ss_j, npb_ss_j);
+      }
+
       if (npf_ss_j == n && npb_ss_j == n) {
+	if (s_i == WATCH_S_I) {
+	  printf("                               no matches\n");
+	}
 	// No matching prefix
 	bpm[s_i] = n;
 	lcp[s_i] = 0;
@@ -97,6 +106,9 @@ namespace NearestPrefix {
 	sizeN_t np_s_j = ss[np_ss_j];
 	bpm[s_i] = np_s_j;
 	lcp[s_i] = Util::longest_common_prefix(&s[s_i], n-s_i, &s[np_s_j], n-np_s_j);
+	if (s_i == WATCH_S_I) {
+	  printf("                               one match at ss[%zu] == s[%zu...] length %zu\n", np_ss_j, np_s_j, lcp[s_i]);
+	}
       } else {
 	// Both prefixes are valid, so the best is the one with the longest common prefix with s[i...]
 	sizeN_t npf_s_j = ss[npf_ss_j];
@@ -105,9 +117,13 @@ namespace NearestPrefix {
 	sizeN_t lcp_npf_s_j = Util::longest_common_prefix(&s[s_i], n-s_i, &s[npf_s_j], n-npf_s_j);
 	sizeN_t lcp_npb_s_j = Util::longest_common_prefix(&s[s_i], n-s_i, &s[npb_s_j], n-npb_s_j);
 
+	if (s_i == WATCH_S_I) {
+	  printf("                               two matches at ss[%zu] == s[%zu...] length %zu / ss[%zu] == s[%zu...] length %zu\n", npf_ss_j, npf_s_j, lcp_npf_s_j, npb_ss_j, npb_s_j, lcp_npb_s_j);
+	}
+	
 	if (lcp_npf_s_j == lcp_npb_s_j) {
 	  // Pick the prefix that's closer to s_i
-	  bpm[s_i] = std::max(lcp_npf_s_j, lcp_npb_s_j);
+	  bpm[s_i] = std::max(npf_s_j, npb_s_j);
 	} else {
 	  // Pick the prefix with the longer lcp
 	  bpm[s_i] = lcp_npf_s_j > lcp_npb_s_j ? npf_s_j : npb_s_j;
@@ -118,6 +134,22 @@ namespace NearestPrefix {
 
     delete[] npf;
     delete[] npb;
+  }
+
+  template <typename sizeN_t>
+  inline bool check_best_prefix_match(const u8* s, sizeN_t* bpm, sizeN_t* lcp, sizeN_t n) {
+    for (sizeN_t s_i = 0; s_i < n; s_i++) {
+      sizeN_t match_s_i = bpm[s_i];
+      sizeN_t match_len = lcp[s_i];
+
+      sizeN_t actual_match_len = Util::longest_common_prefix(&s[s_i], n-s_i, &s[match_s_i], n-match_s_i);
+
+      if (actual_match_len != match_len) {
+	printf("                                   s[%zu] match at s[%zu] len %zu actual len %zu\n", s_i, match_s_i, match_len, actual_match_len);
+	return false;
+      }
+    }
+    return true;
   }
   
 } // namespace NearestPrefix
