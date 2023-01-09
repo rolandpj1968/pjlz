@@ -249,7 +249,20 @@ int main(int argc, char* argv[]) {
       size_t match_len = lsm[i];
       size_t match_len_new = msm_lens[i];
 
-      //assert(match_len == 0 || match_len == match_len_old);
+      if (!(/*match_len_new == 0 ||*/ match_len == match_len_new)) {
+	printf("\n\n");
+	printf("                          s[%zu...] match_len = %zu, match_len_new = %zu\n", i, match_len, match_len_new);
+
+	printf("                                       s[%zu] match_len == %zu, match_len_new == %zu\n", i, match_len, match_len_new);
+	size_t offset = i-bpm[i];
+	size_t offset_new = msm_offsets[i];
+	printf("                                              offset = %zu, new-offset = %zu, match-index %zu, new-match-index %zu\n", offset, offset_new, bpm[i], i-msm_offsets[i]);
+	size_t actual_match = Util::longest_common_prefix(&s[i], n-i, &s[i-offset], n-(i-offset));
+	size_t actual_match_new = Util::longest_common_prefix(&s[i], n-i, &s[i-offset_new], n-(i-offset_new));
+	printf("                                              actual-match-len = %zu, actual-new-match-len = %zu\n", actual_match, actual_match_new);
+	printf("\n\n");
+      }
+      assert(/*match_len_new == 0 ||*/ match_len == match_len_new);
       //assert(match_len == 0 || match_len >= MIN_MATCH_LEN);
       //assert(match_len_old < MIN_MATCH_LEN || match_len == match_len_old);
       
@@ -258,7 +271,7 @@ int main(int argc, char* argv[]) {
 	size_t offset = i-bpm[i];
 	size_t offset_new = msm_offsets[i];
 
-	//assert(offset == offset2);
+	assert(offset == offset_new);
 	
 	size_t offset_len = encoded_len_pjlz(offset, 0);
 
