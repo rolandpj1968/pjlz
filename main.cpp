@@ -5,7 +5,6 @@
 
 #include "longest-common-prefix.hpp"
 #include "maximal-substring-match.hpp"
-#include "nearest-prefix.hpp"
 #include "slurp.hpp"
 #include "suffix-sort.hpp"
 #include "util.hpp"
